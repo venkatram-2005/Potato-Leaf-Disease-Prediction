@@ -115,7 +115,7 @@ in the Software without restriction...
 
 * TensorFlow
 * Streamlit
-* Grad-CAM (Selvaraju et al.)
+* Grad-CAM
 * [Hugging Face](https://huggingface.co/) for free model hosting
 
 > 💡 *This project showcases explainable deep learning for plant disease detection.*
