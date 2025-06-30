@@ -49,7 +49,7 @@ with st.sidebar:
             st.markdown("No predictions yet.")
 
     st.markdown("---")
-    st.caption("Built using TensorFlow, Streamlit, and Keras 🔥")
+    st.caption("Built using TensorFlow, Streamlit, and Grad-CAM 🔥")
 
 # ───────── File Upload ─────────
 uploaded_file = st.file_uploader("Upload a leaf image", type=["jpg", "jpeg", "png"])
@@ -83,3 +83,11 @@ if "prediction" in st.session_state:
                f"with `{np.max(prediction)*100:.2f}%` confidence")
     st.bar_chart(prediction)
     st.caption(f"Raw-Output: {prediction}")
+
+    if st.toggle("Show Grad-CAM Heatmap"):
+        model = build_functional_model_for_gradcam()
+        heatmap = make_gradcam_heatmap(processed_img, model=model, last_conv_layer_name="conv2d_7")
+        gradcam_image = overlay_gradcam(image, heatmap)
+
+        st.markdown("### 🔥 Grad-CAM Heatmap:")
+        st.image(gradcam_image, caption="Model Activation Map", use_container_width=True)

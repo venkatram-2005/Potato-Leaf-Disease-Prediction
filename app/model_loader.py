@@ -1,27 +1,58 @@
+import tensorflow as tf
 import numpy as np
-import tflite_runtime.interpreter as tflite
+import streamlit as st
 import os
+import requests
 
-# ✅ Make sure class order matches your training generator
+# ✅ Class order matches training labels
 class_names = ['Early_Blight', 'Healthy', 'Late_Blight']
 
-# 🔁 Load TFLite model (cached for performance)
-def load_tflite_model():
-    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'model', 'potato_leaf_model.tflite'))
-    interpreter = tflite.Interpreter(model_path=model_path)
-    interpreter.allocate_tensors()
-    return interpreter
+# ✅ Hugging Face model URL
+MODEL_URL = "https://huggingface.co/venkatram-2005/Potato-Leaf-Disease/resolve/main/potato_leaf_model.h5"
 
-# 🔮 Predict using TFLite
+@st.cache_resource
+def load_model():
+    """
+    Loads the model from local path or downloads it from Hugging Face if missing.
+    Cached to avoid repeated reloads in Streamlit.
+    """
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'model', 'potato_leaf_model.h5'))
+
+    if not os.path.exists(model_path):
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        with open(model_path, "wb") as f:
+            response = requests.get(MODEL_URL)
+            f.write(response.content)
+
+    return tf.keras.models.load_model(model_path)
+
 def load_model_and_predict(image_array):
-    interpreter = load_tflite_model()
+    model = load_model()
+    prediction = model.predict(image_array)
+    return prediction, class_names
 
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
+def build_functional_model_for_gradcam():
+    """
+    Builds a Functional model with weights copied from the original Sequential model.
+    Works reliably with Grad-CAM even under Streamlit caching.
+    """
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'model', 'potato_leaf_model.h5'))
 
-    # Resize if needed (image should already be 128x128x3 float32 normalized)
-    interpreter.set_tensor(input_details[0]['index'], image_array.astype(np.float32))
-    interpreter.invoke()
+    if not os.path.exists(model_path):
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        with open(model_path, "wb") as f:
+            response = requests.get(MODEL_URL)
+            f.write(response.content)
 
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    return output_data, class_names
+    seq_model = tf.keras.models.load_model(model_path)
+
+    inputs = tf.keras.Input(shape=(128, 128, 3))
+    x = inputs
+    for layer in seq_model.layers:
+        config = layer.get_config()
+        new_layer = layer.__class__.from_config(config)
+        x = new_layer(x)
+        new_layer.set_weights(layer.get_weights())
+
+    functional_model = tf.keras.Model(inputs=inputs, outputs=x)
+    return functional_model
