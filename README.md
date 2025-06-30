@@ -6,6 +6,15 @@ Built with **TensorFlow**, **Streamlit**, and **OpenCV**.
 
 ---
 
+![image](https://github.com/user-attachments/assets/ecd007ea-2e57-4ae5-b2c7-36f890f6fa68)
+
+![image](https://github.com/user-attachments/assets/d599718f-0028-437b-9eb3-78905e69ac1e)
+
+![image](https://github.com/user-attachments/assets/8f861ade-bcbb-443e-ba0d-bbeed9f7cd8d)
+
+![image](https://github.com/user-attachments/assets/3050d848-f5c8-4fa0-b63d-1ee93d78f806)
+
+
 ## 📸 Features
 
 * ✅ Upload potato leaf images
